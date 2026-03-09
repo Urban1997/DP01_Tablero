@@ -17,7 +17,7 @@
                 TOTAL ALTAS
               </span>
               <div class="text-surface-900 dark:text-surface-0 font-bold text-xl">
-                0
+                  {{ altas }}
               </div>
             </div>
             <div class="flex items-center justify-center bg-gradient-to-b from-green-400 to-green-600 rounded-lg w-11 h-11 shadow-lg">
@@ -37,7 +37,7 @@
                 TOTAL REINGRESO
               </span>
               <div class="text-surface-900 dark:text-surface-0 font-bold text-xl">
-                0
+               {{ reingresos }}
               </div>
             </div>
             <div class="flex items-center justify-center bg-gradient-to-b from-blue-400 to-blue-600 rounded-lg w-11 h-11 shadow-lg">
@@ -57,7 +57,7 @@
                 TOTAL BAJAS
               </span>
               <div class="text-surface-900 dark:text-surface-0 font-bold text-xl">
-                0
+                {{ bajas }}
               </div>
             </div>
             <div class="flex items-center justify-center bg-gradient-to-b from-red-400 to-red-600 rounded-lg w-11 h-11 shadow-lg">
@@ -77,7 +77,7 @@
                 TOTAL CAMBIOS
               </span>
               <div class="text-surface-900 dark:text-surface-0 font-bold text-xl">
-                0
+                 {{ cambios }}
               </div>
             </div>
             <div class="flex items-center justify-center bg-gradient-to-b from-orange-400 to-orange-600 rounded-lg w-11 h-11 shadow-lg">
@@ -97,7 +97,7 @@
                 TOTAL MOVIMIENTOS
               </span>
               <div class="text-surface-900 dark:text-surface-0 font-bold text-xl">
-                0
+              {{ total }}
               </div>
             </div>
             <div class="flex items-center justify-center bg-gradient-to-b from-slate-400 to-slate-600 rounded-lg w-11 h-11 shadow-lg">
@@ -112,5 +112,13 @@
 </template>
 
 <script setup>
-import Card from 'primevue/card';
+import Card from 'primevue/card'
+
+defineProps({
+  altas: Number,
+  reingresos: Number,
+  bajas: Number,
+  cambios: Number,
+  total: Number
+})
 </script>

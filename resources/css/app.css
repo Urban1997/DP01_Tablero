@@ -26,3 +26,30 @@ body {
   border: 1px solid var(--color-principal) !important;
   color: white !important;
 }
+
+
+
+/* Color de los filtros en DataTable */
+.p-column-filter-menu-button {
+    color: #7d2447 !important;
+}
+
+.p-column-filter-menu-button:hover {
+    color: #7d2447 !important;
+}
+
+/* Icono del filtro */
+.p-column-filter-menu-button .pi {
+    color: #7d2447 !important;
+}
+
+/* Botón aplicar filtro */
+.p-column-filter-apply-button {
+    background: #7d2447 !important;
+    border-color: #7d2447 !important;
+}
+
+/* Hover del botón */
+.p-column-filter-apply-button:hover {
+    background: #651c39 !important;
+}

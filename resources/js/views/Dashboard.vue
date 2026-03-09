@@ -1,13 +1,18 @@
 <template>
     <div>
-        <StatsDashboard />
+        <StatsDashboard
+            :altas="totales.altas"
+            :reingresos="totales.reingresos"
+            :bajas="totales.bajas"
+            :cambios="totales.cambios"
+            :total="totales.total"
+        />
         <h3 class="text-2xl font-bold mb-4">
             Reporte de enlaces administrativos
         </h3>
 
         <div class="bg-white shadow-md rounded-lg p-4 mb-4">
             <div class="grid grid-cols-1 gap-3">
-
                 <div class="flex items-center gap-2">
                     <label class="text-sm font-semibold text-gray-600">
                         REPORTE DE MOVIMIENTO DE PERSONAL:
@@ -25,7 +30,6 @@
                         SECRETARÍA DE FINANZAS
                     </span>
                 </div>
-
             </div>
         </div>
 
@@ -91,6 +95,7 @@
                 header="N°"
                 filterField="no"
                 style="min-width: 80px"
+                :showFilterMatchModes="false"
             >
                 <template #filter="{ filterModel }">
                     <InputText
@@ -105,6 +110,7 @@
                 header="No. de control"
                 filterField="control"
                 style="min-width: 200px"
+                :showFilterMatchModes="false"
             >
                 <template #filter="{ filterModel }">
                     <InputText
@@ -119,6 +125,7 @@
                 header="Nombre"
                 filterField="nombre"
                 style="min-width: 150px"
+                 :showFilterMatchModes="false"
             >
                 <template #filter="{ filterModel }">
                     <InputText
@@ -133,6 +140,7 @@
                 header="Secretaría"
                 filterField="secretaria"
                 style="min-width: 200px"
+                :showFilterMatchModes="false"
             >
                 <template #filter="{ filterModel }">
                     <InputText
@@ -147,6 +155,7 @@
                 header="Tipo de movimiento"
                 filterField="movimiento"
                 style="min-width: 200px"
+                :showFilterMatchModes="false"
             >
                 <template #filter="{ filterModel }">
                     <InputText
@@ -161,6 +170,7 @@
                 header="Fecha"
                 filterField="fecha"
                 style="min-width: 150px"
+                :showFilterMatchModes="false"
             >
                 <template #filter="{ filterModel }">
                     <InputText
@@ -175,6 +185,7 @@
                 header="Sueldo Anterior"
                 filterField="sueldoAnterior"
                 style="min-width: 150px"
+                :showFilterMatchModes="false"
             >
                 <template #filter="{ filterModel }">
                     <InputText
@@ -189,6 +200,7 @@
                 header="Puesto Anterior"
                 filterField="puestoAnterior"
                 style="min-width: 150px"
+                :showFilterMatchModes="false"
             >
                 <template #filter="{ filterModel }">
                     <InputText
@@ -250,7 +262,8 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import '../../css/app.css'
+import { ref, onMounted } from "vue";
 import DataTable from "primevue/datatable";
 import Column from "primevue/column";
 import Button from "primevue/button";
@@ -258,32 +271,19 @@ import InputText from "primevue/inputtext";
 import StatsDashboard from "@/components/StatsDashboard.vue";
 import * as XLSX from "xlsx";
 
+import { obtenerDetalles } from "@/services/DetallesService";
+
 const dt = ref();
 const expandedRows = ref([]);
+const movimientos = ref([]);
 
-const movimientos = ref([
-    {
-        no: 1,
-        control: "C-1001",
-        nombre: "Juan Pérez",
-        secretaria: "Finanzas",
-        movimiento: "Cambio",
-        fecha: "2025-03-01",
-        sueldoAnterior: "$12,000",
-        puestoAnterior: "Auxiliar",
-        departamentoAnterior: "Tesorería",
-        direccionAnterior: "Edificio Central",
-        sueldo: "$14,000",
-        puestoPropuesto: "Analista",
-        departamentoPropuesto: "Finanzas",
-        direccionPropuesta: "Oficina Central",
-        observaciones: "Promoción",
-        motivo: "Desempeño",
-        ocupaPlaza: "Plaza 001",
-        noControlPlaza: "P-001",
-        remanente: "No aplica",
-    },
-]);
+const totales = ref({
+    altas: 0,
+    reingresos: 0,
+    bajas: 0,
+    cambios: 0,
+    total: 0,
+});
 
 const filters = ref({
     global: { value: null },
@@ -299,6 +299,66 @@ const filters = ref({
     direccionAnterior: { value: null },
 });
 
+// Cargar datos desde API
+const cargarMovimientos = async () => {
+    try {
+        const ctrl = "Uy5TRUdVUklEQUQ";
+
+        const response = await obtenerDetalles(ctrl);
+
+        console.log("Respuesta completa:", response);
+
+        const data = response?.data ?? response;
+
+        if (!Array.isArray(data) || data.length === 0) {
+            console.warn("Sin datos para mostrar");
+            movimientos.value = [];
+            return;
+        }
+
+        movimientos.value = data.map((item, index) => ({
+            no: index + 1,
+            control: item.NO_CTRL || "",
+            nombre: item.NOMBRE || "",
+            secretaria: item.SECRETARIA || "",
+            movimiento: item.TIPO || "",
+            fecha: item.FECHA || "",
+            sueldoAnterior: item.SUELDO_ANT || "",
+            puestoAnterior: item.PUESTA_ANT || "",
+            departamentoAnterior: item.DEPTO_ANT || "",
+            direccionAnterior: item.DIREC_ANT || "",
+            sueldo: item.SUELDO_ACT || "",
+            puestoPropuesto: item.PUESTO || "",
+            departamentoPropuesto: item.DEPTO_ACT || "",
+            direccionPropuesta: item.DIR_ACT || "",
+            observaciones: item.OBSERVACIONES || "",
+            motivo: item.MOTIVO || "",
+            remanente: item.REMANENTE || "",
+            ocupaPlaza: item.NOMBRE_VACANTE || "",
+            noControlPlaza: item.NOCTRL_VACANTE || "",
+        }));
+        // 🔵 CALCULAR TOTALES
+        totales.value.altas = data.filter((x) => x.TIPO === "ALTA").length;
+        totales.value.reingresos = data.filter(
+            (x) => x.TIPO === "REINGRESO",
+        ).length;
+        totales.value.bajas = data.filter((x) => x.TIPO === "BAJA").length;
+        totales.value.cambios = data.filter((x) => x.TIPO === "CAMBIO").length;
+        totales.value.total = data.length;
+
+        console.log("Movimientos mapeados:", movimientos.value);
+        console.log("Totales:", totales.value);
+    } catch (error) {
+        console.error("Error cargando datos:", error);
+    }
+};
+
+// Ejecutar al montar
+onMounted(() => {
+    cargarMovimientos();
+});
+
+// Limpiar filtros
 const clearFilter = () => {
     filters.value = {
         global: { value: null },
@@ -315,36 +375,41 @@ const clearFilter = () => {
     };
 };
 
+// Exportar Excel
 const exportExcel = () => {
-    const data = movimientos.value.map((item) => ({
+    const filteredData = dt.value?.processedData || [];
+
+    const data = filteredData.map((item) => ({
         "N°": item.no,
         "No. de control": item.control,
-        "Nombre": item.nombre,
-        "Secretaría": item.secretaria,
-        "Movimiento": item.movimiento,
-        "Fecha": item.fecha,
+        Nombre: item.nombre,
+        Secretaría: item.secretaria,
+        Movimiento: item.movimiento,
+        Fecha: item.fecha,
         "Sueldo Anterior": item.sueldoAnterior,
         "Puesto Anterior": item.puestoAnterior,
         "Departamento Anterior": item.departamentoAnterior,
         "Dirección Anterior": item.direccionAnterior,
-        "Sueldo": item.sueldo,
+        Sueldo: item.sueldo,
         "Puesto Propuesto": item.puestoPropuesto,
         "Departamento Propuesto": item.departamentoPropuesto,
         "Dirección Propuesta": item.direccionPropuesta,
         "Ocupa Plaza": item.ocupaPlaza,
         "No Control Plaza": item.noControlPlaza,
-        "Remanente": item.remanente,
-        "Observaciones": item.observaciones,
-        "Motivo": item.motivo,
+        Remanente: item.remanente,
+        Observaciones: item.observaciones,
+        Motivo: item.motivo,
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(data);
     const workbook = XLSX.utils.book_new();
+
     XLSX.utils.book_append_sheet(workbook, worksheet, "Reporte");
 
     XLSX.writeFile(workbook, "reporte-movimientos.xlsx");
 };
 
+// Exportar CSV
 const exportCSV = () => {
     dt.value?.exportCSV();
 };
